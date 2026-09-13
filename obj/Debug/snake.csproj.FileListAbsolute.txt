@@ -16,3 +16,4 @@
 /home/besen/Documents/c#/snake/publish/libraylib.so
 /home/besen/Documents/c#/snake/obj/Debug/snake.csproj.AssemblyReference.cache
 /home/besen/Documents/c#/snake/obj/Debug/snake.csproj.Up2Date
+/home/besen/Documents/c#/snake/obj/Debug/snake.sourcelink.json

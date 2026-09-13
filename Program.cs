@@ -43,6 +43,7 @@ class Program
 
     static double moveInterval = 0.15;
     static double lastMoveTime = 0;
+    static int score = 0;
 
     public static void Main()
     {
@@ -51,10 +52,7 @@ class Program
 
         lastMoveTime = Raylib.GetTime();
 
-        snake.Enqueue(new Vector2(0, 0));
-        snake.Enqueue(new Vector2(0, 1));
-        snake.Enqueue(new Vector2(1, 1));
-        snake.Enqueue(new Vector2(1, 2));
+        score = 0;
 
         while (!Raylib.WindowShouldClose())
         {
@@ -99,6 +97,9 @@ class Program
             Rectangle rect = GetRectOfBoardPosition((int)pos.X, (int)pos.Y);
             Raylib.DrawRectangle((int)rect.X, (int)rect.Y, tileFillSize, tileFillSize, Color.White);
         }
+
+        // Draw score
+        Raylib.DrawText(score.ToString(), screenWidth / 2, (int)(screenHeight * 0.1), tileSize*2, Color.White);
     }
 
     public static void UpdateDirection()
@@ -152,6 +153,11 @@ class Program
         {
             // Remove last part (skipped if ate) - before the self collision check for fairness.
             snake.Dequeue();
+        }
+        else
+        {
+            // Increase score
+            score++;
         }
 
         // Out of bounds
