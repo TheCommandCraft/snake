@@ -1,6 +1,7 @@
 using System.Numerics;
 using Raylib_cs;
 
+namespace Snake;
 public enum Direction
 {
     Up,
@@ -11,17 +12,9 @@ public enum Direction
 
 public class Game
 {
-    const int tileSize = 10;
-    const float tileFillPercentage = 0.9f;
-    const int tileFillOffset = (int)(tileSize * (1 - tileFillPercentage));
-    const int tileFillSize = tileSize - (2 * tileFillOffset);
-    const int tileCount = 64;
-    const int screenWidth = tileSize * tileCount;
-    const int screenHeight = tileSize * tileCount;
-
     Queue<Vector2> snake = new Queue<Vector2>(new[]
     {
-        new Vector2((float)tileCount / 2f, (float)tileCount / 2f)
+        new Vector2((float)Program.tileCount / 2f, (float)Program.tileCount / 2f)
     });
 
     List<Vector2> food = new List<Vector2>
@@ -33,7 +26,7 @@ public class Game
     };
 
     Direction direction = Direction.Down;
-    Vector2 headPosition = new Vector2((float)tileCount / 2f, (float)tileCount / 2f);
+    Vector2 headPosition = new Vector2((float)Program.tileCount / 2f, (float)Program.tileCount / 2f);
 
     bool alive = true;
     string deathMessage = "";
@@ -54,6 +47,9 @@ public class Game
     {
         Raylib.ClearBackground(Color.Black);
 
+        // Render world
+        RenderWorld();
+
         if (alive)
         {
             UpdateDirection();
@@ -67,9 +63,49 @@ public class Game
                 //moveInterval -= 0.005;
             }
         }
+        else
+        {
+            RenderDeadScreen();
+        }
+    }
+    static Rectangle tryAgainBtn = new Rectangle((int)(Program.screenWidth * 0.5 - Program.btnWidth * 0.5), (int)(Program.screenWidth * 0.4 - Program.btnHeight * 0.5), Program.btnWidth, Program.btnHeight);
+    static Rectangle backBtn = new Rectangle((int)(Program.screenWidth * 0.5 - Program.btnWidth * 0.5), (int)(Program.screenWidth * 0.6 - Program.btnHeight * 0.5), Program.btnWidth, Program.btnHeight);
 
-        // Render world
-        RenderWorld();
+    private void RenderDeadScreen()
+    {
+        Program.DrawTextCentered($"You died:", new Vector2(Program.screenWidth * 0.5f, Program.screenHeight * 0.1f), Program.tileSize * 4, Color.White);
+        Program.DrawTextCentered(deathMessage, new Vector2(Program.screenWidth * 0.5f, Program.screenHeight * 0.2f), Program.tileSize * 4, Color.White);
+
+        int startTextSize = Program.tileSize * 4;
+        int quitTextSize = Program.tileSize * 4;
+
+        Vector2 mouse = Raylib.GetMousePosition();
+
+        if (Raylib.CheckCollisionPointRec(mouse, tryAgainBtn))
+        {
+            startTextSize = Program.tileSize * 6;
+
+            if (Raylib.IsMouseButtonReleased(MouseButton.Left))
+            {
+                Program.ResetGame();
+            }
+        }
+        
+        if (Raylib.CheckCollisionPointRec(mouse, backBtn))
+        {
+            quitTextSize = Program.tileSize * 6;
+
+            if (Raylib.IsMouseButtonReleased(MouseButton.Left))
+            {
+                Program.screen = Screen.MainMenu;
+            }
+        }
+
+        Raylib.DrawRectangleLinesEx(tryAgainBtn, 5f, Color.White);
+        Program.DrawTextCentered("Try Again", new Vector2(tryAgainBtn.X + (int)(tryAgainBtn.Width * 0.5), tryAgainBtn.Y + (int)(tryAgainBtn.Height * 0.5)), startTextSize, Color.White);
+
+        Raylib.DrawRectangleLinesEx(backBtn, 5f, Color.White);
+        Program.DrawTextCentered("Back", new Vector2(backBtn.X + (int)(tryAgainBtn.Width * 0.5), backBtn.Y + (int)(tryAgainBtn.Height * 0.5)), quitTextSize, Color.White);
     }
 
     private void RenderWorld()
@@ -77,38 +113,43 @@ public class Game
         // Draw food
         foreach (Vector2 pos in food) {
             Rectangle rect = GetRectOfBoardPosition((int)pos.X, (int)pos.Y);
-            Raylib.DrawRectangle((int)rect.X, (int)rect.Y, tileFillSize, tileFillSize, Color.Red);
+            Raylib.DrawRectangle((int)rect.X, (int)rect.Y, Program.tileFillSize, Program.tileFillSize, Color.Red);
         }
 
         // Draw snake
         foreach (Vector2 pos in snake) {
             Rectangle rect = GetRectOfBoardPosition((int)pos.X, (int)pos.Y);
-            Raylib.DrawRectangle((int)rect.X, (int)rect.Y, tileFillSize, tileFillSize, Color.White);
+            Raylib.DrawRectangle((int)rect.X, (int)rect.Y, Program.tileFillSize, Program.tileFillSize, Color.White);
         }
 
         // Draw score
-        Raylib.DrawText(score.ToString(), screenWidth / 2, (int)(screenHeight * 0.1), tileSize*2, Color.White);
+        Vector2 scorePos = new(Program.screenWidth / 2f, Program.screenHeight * 0.1f);
+        Program.DrawTextCentered(score.ToString(), scorePos, Program.tileSize * 2, Color.White);
     }
 
     private void UpdateDirection()
     {
         if (Raylib.IsKeyDown(KeyboardKey.W))
         {
+            if (direction == Direction.Down) { return; }
             direction = Direction.Up;
         }
 
         if (Raylib.IsKeyDown(KeyboardKey.A))
         {
+            if (direction == Direction.Right) { return; }
             direction = Direction.Left;
         }
 
         if (Raylib.IsKeyDown(KeyboardKey.S))
         {
+            if (direction == Direction.Up) { return; }
             direction = Direction.Down;
         }
 
         if (Raylib.IsKeyDown(KeyboardKey.D))
         {
+            if (direction == Direction.Left) { return; }
             direction = Direction.Right;
         }
     }
@@ -137,7 +178,7 @@ public class Game
         }
 
         // Out of bounds
-        if (newPos.X < 0 || newPos.X >= tileCount || newPos.Y < 0 || newPos.Y >= tileCount)
+        if (newPos.X < 0 || newPos.X >= Program.tileCount || newPos.Y < 0 || newPos.Y >= Program.tileCount)
         {
             alive = false;
             deathMessage = "You hit the edge of the world!";
@@ -166,7 +207,7 @@ public class Game
             // Spawn new food until free position
             while (true)
             {
-                Vector2 newFoodPos = new Vector2(random.Next(0, tileCount));
+                Vector2 newFoodPos = new Vector2(random.Next(0, Program.tileCount));
                 if (!snake.Contains(newFoodPos))
                 {
                     food.Add(newFoodPos);
@@ -184,14 +225,14 @@ public class Game
 
     private Rectangle GetRectOfBoardPosition(int x, int y)
     {
-        if (x < 0 || x >= tileCount || y < 0 || x >= tileCount)
+        if (x < 0 || x >= Program.tileCount || y < 0 || x >= Program.tileCount)
         {
             throw new IndexOutOfRangeException("Position outside world.");
         }
 
-        float posX = x * tileSize + tileFillOffset;
-        float posY = y * tileSize + tileFillOffset;
+        float posX = x * Program.tileSize + Program.tileFillOffset;
+        float posY = y * Program.tileSize + Program.tileFillOffset;
 
-        return new Rectangle(posX, posY, tileFillSize, tileFillSize);
+        return new Rectangle(posX, posY, Program.tileFillSize, Program.tileFillSize);
     }
 }
