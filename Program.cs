@@ -21,7 +21,7 @@ class Program
 
     public static Screen screen = Screen.MainMenu;
 
-    private static Game game = new Game();
+    private static Game game;
 
     public static void Main()
     {
@@ -75,7 +75,8 @@ class Program
             startTextSize = tileSize * 6;
 
             if (Raylib.IsMouseButtonReleased(MouseButton.Left))
-            {
+            {   
+                game = new Game();
                 screen = Screen.Game;
             }
         }
