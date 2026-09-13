@@ -45,6 +45,8 @@ class Program
     static double lastMoveTime = 0;
     static int score = 0;
 
+    static Random random = new Random();
+
     public static void Main()
     {
         Raylib.InitWindow(screenWidth, screenHeight, "Snake");
@@ -148,6 +150,22 @@ class Program
                 break;
         }
 
+        // Out of bounds
+        if (newPos.X < 0 || newPos.X >= tileCount || newPos.Y < 0 || newPos.Y >= tileCount)
+        {
+            alive = false;
+            deathMessage = "You hit the edge of the world!";
+            return;
+        }
+
+        // Hit snake
+        if (snake.Contains(newPos) && snake.Peek() != newPos)
+        {
+            alive = false;
+            deathMessage = "You hit yourself!";
+            return;
+        }
+
         // Eat food
         if (!food.Remove(newPos))
         {
@@ -158,22 +176,17 @@ class Program
         {
             // Increase score
             score++;
-        }
 
-        // Out of bounds
-        if (newPos.X < 0 || newPos.X >= tileCount || newPos.Y < 0 || newPos.Y >= tileCount)
-        {
-            alive = false;
-            deathMessage = "You hit the edge of the world!";
-            return;
-        }
-
-        // Hit snake
-        if (snake.Contains(newPos))
-        {
-            alive = false;
-            deathMessage = "You hit yourself!";
-            return;
+            // Spawn new food until free position
+            while (true)
+            {
+                Vector2 newFoodPos = new Vector2(random.Next(0, tileCount));
+                if (!snake.Contains(newFoodPos))
+                {
+                    food.Add(newFoodPos);
+                    break;
+                }
+            }
         }
 
         // Add / move head
